@@ -1,0 +1,432 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+    color: white;
+    min-height: 100vh;
+    font-size: 16px; /* Базовый размер шрифта */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px;
+    min-height: 100vh;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+h1 {
+    font-size: 2em; /* Уменьшен для мобильных */
+    margin-bottom: 8px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    background: linear-gradient(45deg, #0088cc, #00aaff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+.casino-stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 1em;
+    flex-wrap: wrap;
+}
+
+.info {
+    color: #00aaff;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.game-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.game-board, .players-panel {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.cell {
+    aspect-ratio: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em; /* Уменьшен для мобильных */
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-direction: column;
+    min-height: 50px; /* Минимальная высота для тач-интерфейса */
+}
+
+.cell:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+.cell.selected {
+    background: rgba(0, 170, 255, 0.3);
+    border-color: #00aaff;
+}
+
+.cell.mine {
+    background: rgba(255, 68, 68, 0.3);
+    border-color: #ff4444;
+}
+
+.cell.safe {
+    background: rgba(0, 170, 255, 0.3);
+    border-color: #00aaff;
+}
+
+.players-list {
+    max-height: 200px; /* Уменьшена для мобильных */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
+}
+
+.player {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px;
+    margin: 4px 0;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9em;
+}
+
+.player.winner {
+    background: rgba(0, 170, 255, 0.2);
+    border-left: 4px solid #00aaff;
+}
+
+.player.loser {
+    background: rgba(255, 68, 68, 0.2);
+    border-left: 4px solid #ff4444;
+}
+
+.add-player {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+input[type="number"] {
+    width: 100%;
+    padding: 12px; /* Увеличен для тач-интерфейса */
+    margin: 8px 0;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    font-size: 16px; /* Предотвращает zoom в iOS */
+    min-height: 44px; /* Минимальная высота для тач-интерфейса */
+}
+
+.selection-info {
+    margin: 8px 0;
+    font-weight: bold;
+    font-size: 1em;
+}
+
+#selectedCell {
+    color: #00aaff;
+    font-weight: bold;
+}
+
+button {
+    background: linear-gradient(45deg, #0088cc, #00aaff);
+    color: white;
+    border: none;
+    padding: 14px 20px; /* Увеличен для тач-интерфейса */
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    margin: 5px;
+    min-height: 44px; /* Минимальная высота для тач-интерфейса */
+    min-width: 44px; /* Минимальная ширина для тач-интерфейса */
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 170, 255, 0.4);
+}
+
+button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.game-controls {
+    text-align: center;
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-info {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 12px;
+    font-size: 1em;
+}
+
+.results, .game-history {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.result-item {
+    padding: 8px;
+    margin: 4px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9em;
+}
+
+.history-item {
+    padding: 8px;
+    margin: 4px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border-left: 4px solid #00aaff;
+    font-size: 0.9em;
+}
+
+.algorithm-info {
+    background: rgba(0, 170, 255, 0.2);
+    padding: 8px;
+    border-radius: 6px;
+    margin: 8px 0;
+    font-size: 0.85em;
+    border: 1px solid rgba(0, 170, 255, 0.3);
+}
+
+.win-text {
+    color: #00ff88;
+    font-weight: bold;
+}
+
+.lose-text {
+    color: #ff4444;
+    font-weight: bold;
+}
+
+.coefficient-badge {
+    background: linear-gradient(45deg, #ff6b6b, #ffa500);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+    }
+    
+    .game-area {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .casino-stats {
+        flex-direction: column;
+        gap: 10px;
+        font-size: 0.9em;
+    }
+    
+    .game-info {
+        flex-direction: column;
+        gap: 8px;
+        font-size: 0.9em;
+    }
+    
+    .grid {
+        gap: 6px;
+    }
+    
+    .cell {
+        font-size: 1em;
+        min-height: 45px;
+    }
+    
+    .game-board, .players-panel {
+        padding: 12px;
+    }
+    
+    button {
+        padding: 12px 16px;
+        font-size: 0.95em;
+    }
+    
+    input[type="number"] {
+        padding: 10px;
+        font-size: 16px; /* Фиксированный размер для iOS */
+    }
+    
+    .players-list {
+        max-height: 150px;
+    }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.6em;
+    }
+    
+    .container {
+        padding: 8px;
+    }
+    
+    header {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .game-board, .players-panel {
+        padding: 10px;
+    }
+    
+    .cell {
+        min-height: 40px;
+        font-size: 0.9em;
+    }
+    
+    .grid {
+        gap: 4px;
+    }
+    
+    button {
+        padding: 10px 14px;
+        font-size: 0.9em;
+    }
+    
+    .casino-stats,
+    .game-info,
+    .selection-info,
+    .player,
+    .result-item,
+    .history-item {
+        font-size: 0.85em;
+    }
+    
+    input[type="number"] {
+        padding: 8px;
+        min-height: 40px;
+    }
+}
+
+/* Портретная ориентация */
+@media (max-width: 768px) and (orientation: portrait) {
+    .game-area {
+        gap: 12px;
+    }
+    
+    .container {
+        padding: 8px;
+    }
+}
+
+/* Ландшафтная ориентация на мобильных */
+@media (max-width: 900px) and (orientation: landscape) {
+    .game-area {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .players-list {
+        max-height: 120px;
+    }
+    
+    .container {
+        padding: 10px;
+    }
+}
+
+/* Предотвращение выделения текста при тапе */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+/* Разрешаем выделение для input */
+input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+}
+
+/* Улучшение скролла для вебкита */
+.players-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.players-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+.players-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 170, 255, 0.5);
+    border-radius: 2px;
+}
+
+.players-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 170, 255, 0.7);
+}
