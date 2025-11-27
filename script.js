@@ -1,448 +1,604 @@
-class CasinoGame {
-    constructor() {
-        this.players = [];
-        this.mine = null;
-        this.casinoBalance = 1000; // Стартовый баланс 1,000 TON
-        this.gameHistory = [];
-        this.currentPlayerCell = null;
-        this.isGameActive = false;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #0088cc;
+    --secondary-color: #00aaff;
+    --accent-color: #ff6b6b;
+    --success-color: #00ff88;
+    --warning-color: #ffa500;
+    --background-dark: #0a0a0a;
+    --background-light: #1a1a2e;
+    --surface-color: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: linear-gradient(135deg, var(--background-dark), var(--background-light));
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 16px;
+    overflow-x: hidden;
+}
+
+.mobile-container {
+    max-width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--background-dark);
+}
+
+/* Верхняя панель с балансом */
+.header {
+    background: var(--surface-color);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.balance-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-balance, .casino-balance {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.balance-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.balance-amount {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--success-color);
+}
+
+.casino-balance .balance-amount {
+    color: var(--secondary-color);
+}
+
+/* Основной контент */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+    overflow-y: auto;
+}
+
+/* Игровая секция */
+.game-section {
+    background: var(--surface-color);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+.game-header {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.game-header h1 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+.coefficient-badge {
+    background: linear-gradient(45deg, var(--accent-color), var(--warning-color));
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.game-board {
+    margin: 20px 0;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 0 auto;
+    max-width: 300px;
+}
+
+.cell {
+    aspect-ratio: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 70px;
+}
+
+.cell:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+.cell.selected {
+    background: rgba(0, 170, 255, 0.3);
+    border-color: var(--secondary-color);
+}
+
+.cell.mine {
+    background: rgba(255, 68, 68, 0.3);
+    border-color: var(--accent-color);
+}
+
+.cell.safe {
+    background: rgba(0, 170, 255, 0.3);
+    border-color: var(--secondary-color);
+}
+
+.current-selection {
+    text-align: center;
+    margin-top: 16px;
+}
+
+.selection-info {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+#selectedCell {
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+
+/* Секция ставок */
+.bets-section {
+    background: var(--surface-color);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+.bets-panel, .players-panel {
+    margin-bottom: 20px;
+}
+
+.bets-panel h3, .players-panel h3 {
+    margin-bottom: 12px;
+    color: var(--text-primary);
+    font-size: 1.125rem;
+}
+
+.bet-input-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.bet-input-group input {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    font-size: 16px;
+    min-height: 44px;
+}
+
+.quick-bet {
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-weight: 600;
+    min-height: 44px;
+    transition: all 0.2s ease;
+}
+
+.quick-bet:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.place-bet-btn, .add-bot-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+}
+
+.place-bet-btn:hover, .add-bot-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 170, 255, 0.3);
+}
+
+.players-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.player {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    margin-bottom: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border-left: 4px solid var(--secondary-color);
+}
+
+.player.winner {
+    border-left-color: var(--success-color);
+}
+
+.player.loser {
+    border-left-color: var(--accent-color);
+}
+
+.player-info {
+    flex: 1;
+}
+
+.player-bet {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* Панель управления */
+.control-section {
+    background: var(--surface-color);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+.game-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.start-game-btn, .next-round-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 44px;
+}
+
+.start-game-btn {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.next-round-btn {
+    background: linear-gradient(45deg, var(--accent-color), var(--warning-color));
+    color: white;
+}
+
+.start-game-btn:hover, .next-round-btn:hover {
+    transform: translateY(-2px);
+}
+
+.start-game-btn:disabled, .next-round-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.game-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Нижняя навигация */
+.bottom-nav {
+    display: flex;
+    background: var(--surface-color);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-color);
+    padding: 8px 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+}
+
+.nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nav-btn.active {
+    color: var(--secondary-color);
+}
+
+.nav-icon {
+    font-size: 1.25rem;
+}
+
+.nav-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Модальные окна */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--background-light);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+/* Стили для результатов и истории */
+.result-item, .history-item {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.algorithm-info {
+    background: rgba(0, 170, 255, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(0, 170, 255, 0.3);
+}
+
+.win-text {
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.lose-text {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.profile-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.action-btn {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-color);
+    color: var(--text-primary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Адаптация для больших экранов */
+@media (min-width: 768px) {
+    .mobile-container {
+        max-width: 400px;
+        margin: 0 auto;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        min-height: 100vh;
     }
-
-    init() {
-        this.createGrid();
-        this.updateUI();
-        
-        // Добавляем обработчики событий после инициализации DOM
-        document.getElementById('startGame').addEventListener('click', () => this.startGame());
-        document.getElementById('nextRound').addEventListener('click', () => this.nextRound());
-    }
-
-    createGrid() {
-        const grid = document.getElementById('gameGrid');
-        if (!grid) return;
-        
-        grid.innerHTML = '';
-        
-        for (let i = 1; i <= 9; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.innerHTML = `<span>${i}</span>`;
-            cell.dataset.cell = i;
-            cell.addEventListener('click', () => this.selectCell(i));
-            grid.appendChild(cell);
-        }
-    }
-
-    selectCell(cellNumber) {
-        if (this.isGameActive) return;
-        
-        this.currentPlayerCell = cellNumber;
-        this.updateCellSelectionUI();
-    }
-
-    updateCellSelectionUI() {
-        const selectedCellElement = document.getElementById('selectedCell');
-        if (selectedCellElement) {
-            selectedCellElement.textContent = this.currentPlayerCell ? this.currentPlayerCell : '-';
-        }
-        
-        // Подсвечиваем выбранную ячейку на поле
-        document.querySelectorAll('.cell').forEach(cell => {
-            const cellNum = parseInt(cell.dataset.cell);
-            cell.classList.toggle('selected', cellNum === this.currentPlayerCell);
-        });
-    }
-
-    addPlayer() {
-        if (this.isGameActive) {
-            alert('Игра уже началась! Дождитесь окончания раунда.');
-            return;
-        }
-        
-        const betInput = document.getElementById('playerBet');
-        const bet = parseInt(betInput.value);
-        
-        if (!bet || bet < 1) {
-            alert('Минимальная ставка 1 TON');
-            return;
-        }
-        
-        if (!this.currentPlayerCell) {
-            alert('Выберите ячейку для ставки!');
-            return;
-        }
-        
-        const player = {
-            id: Date.now(),
-            bet: bet,
-            cell: this.currentPlayerCell,
-            order: this.players.length + 1
-        };
-        
-        this.players.push(player);
-        this.currentPlayerCell = null;
-        betInput.value = '';
-        this.updateCellSelectionUI();
-        this.updatePlayersList();
-        this.updateUI();
-    }
-
-    updatePlayersList() {
-        const list = document.getElementById('playersList');
-        if (!list) return;
-        
-        list.innerHTML = '';
-        
-        this.players.forEach(player => {
-            const playerEl = document.createElement('div');
-            playerEl.className = 'player';
-            playerEl.innerHTML = `
-                <div>
-                    <strong>Игрок ${player.order}</strong><br>
-                    Ставка: ${player.bet} TON<br>
-                    Ячейка: ${player.cell}
-                </div>
-                <button class="remove-player-btn" data-id="${player.id}">✕</button>
-            `;
-            list.appendChild(playerEl);
-        });
-
-        // Добавляем обработчики для кнопок удаления
-        document.querySelectorAll('.remove-player-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const playerId = parseInt(e.target.dataset.id);
-                this.removePlayer(playerId);
-            });
-        });
-    }
-
-    removePlayer(playerId) {
-        if (this.isGameActive) {
-            alert('Нельзя удалять игроков во время игры!');
-            return;
-        }
-        
-        this.players = this.players.filter(p => p.id !== playerId);
-        this.updatePlayersOrder();
-        this.updatePlayersList();
-        this.updateUI();
-    }
-
-    updatePlayersOrder() {
-        this.players.forEach((player, index) => {
-            player.order = index + 1;
-        });
-    }
-
-    startGame() {
-        if (this.players.length < 1) {
-            alert('Добавьте хотя бы одного игрока!');
-            return;
-        }
-        
-        this.isGameActive = true;
-        this.generateMine();
-        this.calculateResults();
-        this.updateUI();
-        
-        const startGameBtn = document.getElementById('startGame');
-        const nextRoundBtn = document.getElementById('nextRound');
-        if (startGameBtn) startGameBtn.disabled = true;
-        if (nextRoundBtn) nextRoundBtn.disabled = false;
-    }
-
-    generateMine() {
-        // Собираем статистику по ячейкам
-        const cellStats = {};
-        for (let i = 1; i <= 9; i++) {
-            cellStats[i] = { totalBet: 0, players: 0 };
-        }
-        
-        this.players.forEach(player => {
-            cellStats[player.cell].totalBet += player.bet;
-            cellStats[player.cell].players += 1;
-        });
-        
-        // Находим ячейки, на которые делали ставки
-        const usedCells = Object.entries(cellStats)
-            .filter(([cell, stats]) => stats.players > 0)
-            .map(([cell, stats]) => ({
-                cell: parseInt(cell),
-                totalBet: stats.totalBet,
-                players: stats.players
-            }));
-        
-        // Применяем алгоритм определения мины
-        if (usedCells.length === 1) {
-            // Все поставили на одну ячейку
-            this.mine = usedCells[0].cell;
-        } else if (usedCells.length === 2) {
-            // Поставили на две разные ячейки
-            const cell1 = usedCells[0];
-            const cell2 = usedCells[1];
-            
-            // Проверяем соотношение ставок
-            const ratio1 = cell1.totalBet / cell2.totalBet;
-            const ratio2 = cell2.totalBet / cell1.totalBet;
-            
-            if (ratio1 <= 2 && ratio2 <= 2) {
-                // Разница не более чем в 2 раза - выбираем ячейку с меньшей суммой
-                this.mine = cell1.totalBet < cell2.totalBet ? cell1.cell : cell2.cell;
-            } else {
-                // Разница больше чем в 2 раза - выбираем ячейку с большей суммой
-                this.mine = cell1.totalBet > cell2.totalBet ? cell1.cell : cell2.cell;
-            }
-        } else {
-            // Три или более ячеек - выбираем случайную из наименее популярных
-            const minPlayers = Math.min(...usedCells.map(cell => cell.players));
-            const leastPopularCells = usedCells.filter(cell => cell.players === minPlayers);
-            
-            // Случайный выбор среди наименее популярных
-            const randomIndex = Math.floor(Math.random() * leastPopularCells.length);
-            this.mine = leastPopularCells[randomIndex].cell;
-        }
-    }
-
-    calculateResults() {
-        const totalBank = this.players.reduce((sum, player) => sum + player.bet, 0);
-        
-        // Определяем победителей (тех, кто не попал на мину)
-        const winners = this.players.filter(player => 
-            player.cell !== this.mine
-        );
-        
-        // Определяем проигравших (тех, кто попал на мину)
-        const losers = this.players.filter(player => 
-            player.cell === this.mine
-        );
-        
-        // Сумма проигранных ставок (фонд)
-        const lostAmount = losers.reduce((sum, player) => sum + player.bet, 0);
-        
-        // Сумма бонусов для победителей (25% от их ставок)
-        const totalBonus = winners.reduce((sum, player) => sum + (player.bet * 0.25), 0);
-        
-        // Распределяем выигрыш с коэффициентом 1.25x
-        winners.forEach(winner => {
-            const bonus = winner.bet * 0.25;
-            winner.payout = winner.bet + bonus; // Ставка + 25% бонус
-            winner.netResult = bonus; // Чистый выигрыш (только бонус)
-        });
-        
-        // Помечаем проигравших
-        losers.forEach(loser => {
-            loser.payout = 0;
-            loser.netResult = -loser.bet;
-        });
-        
-        // Доход казино = проигранные ставки - выплаченные бонусы
-        this.casinoIncome = lostAmount - totalBonus;
-        
-        // Обновляем баланс казино
-        this.casinoBalance += this.casinoIncome;
-        
-        // Сохраняем в историю
-        this.saveToHistory(totalBank, this.casinoIncome, winners.length);
-        
-        this.displayResults();
-    }
-
-    displayResults() {
-        const resultsDiv = document.getElementById('roundResults');
-        if (!resultsDiv) return;
-        
-        resultsDiv.innerHTML = '';
-        
-        // Показываем коэффициент
-        const coefficientInfo = document.createElement('div');
-        coefficientInfo.className = 'algorithm-info';
-        coefficientInfo.innerHTML = `<strong>🎯 Коэффициент для всех игроков:</strong> <span class="coefficient-badge">1.25x</span>`;
-        resultsDiv.appendChild(coefficientInfo);
-        
-        // Показываем алгоритм выбора мины
-        const algorithmInfo = document.createElement('div');
-        algorithmInfo.className = 'algorithm-info';
-        algorithmInfo.innerHTML = `<strong>🤖 Алгоритм выбора мины:</strong> ${this.getAlgorithmExplanation()}`;
-        resultsDiv.appendChild(algorithmInfo);
-        
-        // Показываем мину
-        const mineInfo = document.createElement('div');
-        mineInfo.className = 'result-item';
-        mineInfo.innerHTML = `<strong>💣 Мина в ячейке:</strong> ${this.mine}`;
-        resultsDiv.appendChild(mineInfo);
-        
-        // Показываем фонд проигравших
-        const losers = this.players.filter(player => player.cell === this.mine);
-        const lostAmount = losers.reduce((sum, player) => sum + player.bet, 0);
-        const fundInfo = document.createElement('div');
-        fundInfo.className = 'result-item';
-        fundInfo.innerHTML = `<strong>💰 Фонд проигравших:</strong> ${lostAmount.toFixed(2)} TON`;
-        resultsDiv.appendChild(fundInfo);
-        
-        // Показываем результаты игроков
-        this.players.forEach(player => {
-            const result = document.createElement('div');
-            result.className = `result-item ${player.payout > player.bet ? 'winner' : 'loser'}`;
-            
-            const isWinner = player.payout > player.bet;
-            const resultClass = isWinner ? 'win-text' : 'lose-text';
-            const resultSymbol = isWinner ? '+' : '';
-            
-            if (isWinner) {
-                const bonus = player.bet * 0.25;
-                result.innerHTML = `
-                    <strong>Игрок ${player.order}</strong> (Выиграл)<br>
-                    Ставка: ${player.bet} TON + Выигрыш: ${bonus.toFixed(2)} TON = <strong>${player.payout.toFixed(2)} TON</strong><br>
-                    Результат: <span class="${resultClass}">${resultSymbol}${player.netResult.toFixed(2)} TON</span>
-                `;
-            } else {
-                result.innerHTML = `
-                    <strong>Игрок ${player.order}</strong> (Проиграл)<br>
-                    Ставка: ${player.bet} TON | Выплата: 0 TON<br>
-                    Результат: <span class="${resultClass}">${resultSymbol}${player.netResult.toFixed(2)} TON</span>
-                `;
-            }
-            resultsDiv.appendChild(result);
-        });
-        
-        // Показываем доход казино
-        const casinoResult = document.createElement('div');
-        casinoResult.className = 'result-item';
-        casinoResult.innerHTML = `<strong>🏦 Доход казино:</strong> ${this.casinoIncome.toFixed(2)} TON`;
-        resultsDiv.appendChild(casinoResult);
-        
-        // Подсвечиваем ячейки на поле
-        this.highlightCells();
-    }
-
-    getAlgorithmExplanation() {
-        // Собираем статистику по ячейкам
-        const cellStats = {};
-        for (let i = 1; i <= 9; i++) {
-            cellStats[i] = { totalBet: 0, players: 0 };
-        }
-        
-        this.players.forEach(player => {
-            cellStats[player.cell].totalBet += player.bet;
-            cellStats[player.cell].players += 1;
-        });
-        
-        const usedCells = Object.entries(cellStats)
-            .filter(([cell, stats]) => stats.players > 0)
-            .map(([cell, stats]) => ({
-                cell: parseInt(cell),
-                totalBet: stats.totalBet,
-                players: stats.players
-            }));
-        
-        if (usedCells.length === 1) {
-            return "Все игроки поставили на одну ячейку → мина там";
-        } else if (usedCells.length === 2) {
-            const cell1 = usedCells[0];
-            const cell2 = usedCells[1];
-            const ratio1 = cell1.totalBet / cell2.totalBet;
-            const ratio2 = cell2.totalBet / cell1.totalBet;
-            
-            if (ratio1 <= 2 && ratio2 <= 2) {
-                return `Разница ставок ≤ 2x → мина в ячейке с меньшей суммой (${this.mine})`;
-            } else {
-                return `Разница ставок > 2x → мина в ячейке с большей суммой (${this.mine})`;
-            }
-        } else {
-            return `Много ячеек → мина в наименее популярной ячейке (${this.mine})`;
-        }
-    }
-
-    highlightCells() {
-        document.querySelectorAll('.cell').forEach(cell => {
-            const cellNum = parseInt(cell.dataset.cell);
-            if (cellNum === this.mine) {
-                cell.classList.add('mine');
-                cell.innerHTML = '💣<br><small>' + cellNum + '</small>';
-            } else {
-                cell.classList.add('safe');
-                cell.innerHTML = '💰<br><small>' + cellNum + '</small>';
-            }
-        });
-    }
-
-    saveToHistory(totalBank, casinoIncome, winnersCount) {
-        const historyItem = {
-            date: new Date().toLocaleString(),
-            players: this.players.length,
-            totalBank,
-            casinoIncome,
-            winnersCount,
-            mine: this.mine
-        };
-        
-        this.gameHistory.unshift(historyItem);
-        this.updateHistory();
-    }
-
-    updateHistory() {
-        const historyDiv = document.getElementById('gameHistory');
-        if (!historyDiv) return;
-        
-        historyDiv.innerHTML = '';
-        
-        this.gameHistory.slice(0, 5).forEach(game => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            item.innerHTML = `
-                <strong>${game.date}</strong><br>
-                Игроков: ${game.players} | Банк: ${game.totalBank} TON<br>
-                Казино: ${game.casinoIncome.toFixed(2)} TON | Победителей: ${game.winnersCount}<br>
-                Мина: ${game.mine}
-            `;
-            historyDiv.appendChild(item);
-        });
-    }
-
-    nextRound() {
-        this.players = [];
-        this.mine = null;
-        this.currentPlayerCell = null;
-        this.isGameActive = false;
-        
-        this.createGrid();
-        this.updatePlayersList();
-        this.updateUI();
-        
-        const resultsDiv = document.getElementById('roundResults');
-        const startGameBtn = document.getElementById('startGame');
-        const nextRoundBtn = document.getElementById('nextRound');
-        
-        if (resultsDiv) resultsDiv.innerHTML = '';
-        if (startGameBtn) startGameBtn.disabled = false;
-        if (nextRoundBtn) nextRoundBtn.disabled = true;
-    }
-
-    updateUI() {
-        const casinoBalanceElement = document.getElementById('casinoBalance');
-        const totalBankElement = document.getElementById('totalBank');
-        const playersCountElement = document.getElementById('playersCount');
-        
-        if (casinoBalanceElement) casinoBalanceElement.textContent = this.casinoBalance.toFixed(2);
-        
-        const totalBank = this.players.reduce((sum, player) => sum + player.bet, 0);
-        
-        if (totalBankElement) totalBankElement.textContent = totalBank;
-        if (playersCountElement) playersCountElement.textContent = this.players.length;
+    
+    body {
+        background: var(--background-dark);
+        padding: 20px 0;
     }
 }
 
-// Создаем глобальную переменную для игры
-let game;
-
-// Инициализация игры после загрузки DOM
-document.addEventListener('DOMContentLoaded', function() {
-    game = new CasinoGame();
-    game.init();
-    
-    // Добавляем обработчик для кнопки добавления игрока
-    const addPlayerBtn = document.querySelector('.add-player button');
-    if (addPlayerBtn) {
-        addPlayerBtn.addEventListener('click', () => game.addPlayer());
+/* Адаптация для очень маленьких экранов */
+@media (max-width: 360px) {
+    .main-content {
+        padding: 12px;
     }
-});
+    
+    .game-section, .bets-section, .control-section {
+        padding: 16px;
+    }
+    
+    .cell {
+        min-height: 60px;
+        font-size: 1.1rem;
+    }
+    
+    .grid {
+        gap: 6px;
+    }
+}
+
+/* Портретная ориентация */
+@media (max-width: 768px) and (orientation: portrait) {
+    .main-content {
+        gap: 12px;
+    }
+}
+
+/* Ландшафтная ориентация на мобильных */
+@media (max-width: 900px) and (orientation: landscape) {
+    .main-content {
+        gap: 12px;
+    }
+    
+    .players-list {
+        max-height: 120px;
+    }
+}
+
+/* Улучшения для тач-интерфейса */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+}
+
+/* Улучшение скролла */
+.players-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.players-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+.players-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 170, 255, 0.5);
+    border-radius: 2px;
+}
